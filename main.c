@@ -448,7 +448,11 @@ int main (int argc, char **argv)
 
     SDL_TerminalSetSize(terminal, 80, 25);
     SDL_TerminalSetPosition(terminal, 0, 0);
+
+    /* from https://gamedev.stackexchange.com/questions/102870/rescale-pixel-art-scenery-before-rendering-in-sdl2 */
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     SDL_TerminalSetScaling(terminal, 1.5, 1.5);
+
     SDL_TerminalDisableKB(terminal);
 
     SDL_TerminalSetDefaultBackground(terminal, 0, 0, 0, 255);
