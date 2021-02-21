@@ -7,7 +7,6 @@
 
 #include "pe_base.h"
 #include "pe_i8251.h"
-#include "console_impl.h"
 
 void pe_i8251_write(uint16_t addr, uint8_t data, pe_i8251_t * obj)
 {

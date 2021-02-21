@@ -380,26 +380,26 @@ int main (int argc, char **argv)
     if (!window)
     {
         fprintf(stderr, "Can't create main SDL2 window: %s\n", SDL_GetError());
-        goto cleanup_sdl_window;
+        goto cleanup_sdl;
     }
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
     if (!renderer)
     {
         fprintf(stderr, "Can't create an SDL2 renderer: %s\n", SDL_GetError());
-        goto cleanup_sdl_renderer;
+        goto cleanup_sdl_window;
     }
 
     SDL_Terminal *terminal = SDL_CreateTerminal();
     if (!terminal)
     {
-        fprintf(stderr, "Can't create an SDL2 renderer: %s\n", SDL_GetError());
-        goto cleanup_sdl_terminal;
+        fprintf(stderr, "Can't create an SDL2 terminal: %s\n", SDL_GetError());
+        goto cleanup_sdl_renderer;
     }
 
-    if (SDL_TerminalSetFont(terminal, font, 12))
+    if (SDL_TerminalSetFont(terminal, font, 12) < 0)
     {
-        fprintf(stderr, "Selected font (%s) was not found!\n", font);
+        fprintf(stderr, "Selected font (%s) was not found or couldn't be opened!\n", font);
         goto cleanup_sdl_terminal;
     }
 
