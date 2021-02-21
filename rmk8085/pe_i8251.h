@@ -13,9 +13,9 @@
 typedef struct
 {
 	pe_base_peri_t		base;
-	void (*on_new_char)(uint8_t new_char, void * userdata);//			callback;
-	void (*on_kbhit_char)(bool *have_data, void * userdata);//			callback;
-	void (*on_fetch_char)(uint8_t *new_char, void * userdata);//			callback;
+	int (*on_new_char)(uint8_t new_char, void * userdata);//			callback;
+	int (*on_kbhit_char)(bool *have_data, void * userdata);//			callback;
+	int (*on_fetch_char)(uint8_t *new_char, void * userdata);//			callback;
 	void				*callback_userdata;
 } pe_i8251_t;
 

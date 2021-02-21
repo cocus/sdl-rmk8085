@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 
-int SDL_TerminalEventFilter (const SDL_Event *event);
+int SDL_TerminalEventFilter (void* userdata, SDL_Event *event);
 int SDL_TerminalEvent (SDL_Terminal *terminal, const SDL_Event *event);
 
 int SDL_TerminalNewline (SDL_Terminal *terminal);

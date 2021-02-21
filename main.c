@@ -256,7 +256,6 @@ int rmk_thread(void *data)
 
     SDL_Terminal *terminal = (SDL_Terminal*)data;
 
-	console_start();
 	pe_start(terminal);
 
 	cpu.pc = 0;
@@ -280,6 +279,8 @@ int rmk_thread(void *data)
             SDL_Delay(1);
         }
     }
+
+    pe_end();
 }
 
 
@@ -362,41 +363,63 @@ int callback_on_kbhit_char(bool *have_data, void * userdata)
 
 int main (int argc, char **argv)
 {
+    int return_status = EXIT_FAILURE;
     Uint32 last_tick = 0;
-    int fps = 100;
-    SDL_Surface *screen, *image;
+    const char font[] = "droid_sans_mono.ttf";
+    int fps = 50;
+    SDL_Surface *image;
     SDL_Thread *rmk_th;
 
-    if (SDL_Init (SDL_INIT_VIDEO) < 0) {
-	    fprintf (stderr, "Video initialization failed: %s", SDL_GetError());
-		SDL_Quit();
-		exit (EXIT_FAILURE);
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
+	    fprintf(stderr, "SDL2 Video initialization failed: %s\n", SDL_GetError());
+        goto cleanup_sdl;
 	}
 
     SDL_Window *window = SDL_CreateWindow("RMK8085 SDL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 860, 545, 0);
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
-    screen = SDL_GetWindowSurface(window); //SDL_SetVideoMode(800, 600, 32, SDL_SWSURFACE | SDL_DOUBLEBUF);
+    if (!window)
+    {
+        fprintf(stderr, "Can't create main SDL2 window: %s\n", SDL_GetError());
+        goto cleanup_sdl_window;
+    }
 
-    SDL_Terminal *terminal =  SDL_CreateTerminal ();
-    SDL_TerminalSetFont (terminal, "droid_sans_mono.ttf", 12);
-    SDL_TerminalSetSize (terminal, 80, 25);
-    SDL_TerminalSetPosition (terminal, 0, 0);
-    SDL_TerminalSetScaling (terminal, 1.5, 1.5);
-    SDL_TerminalDisableKB (terminal);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+    if (!renderer)
+    {
+        fprintf(stderr, "Can't create an SDL2 renderer: %s\n", SDL_GetError());
+        goto cleanup_sdl_renderer;
+    }
+
+    SDL_Terminal *terminal = SDL_CreateTerminal();
+    if (!terminal)
+    {
+        fprintf(stderr, "Can't create an SDL2 renderer: %s\n", SDL_GetError());
+        goto cleanup_sdl_terminal;
+    }
+
+    if (SDL_TerminalSetFont(terminal, font, 12))
+    {
+        fprintf(stderr, "Selected font (%s) was not found!\n", font);
+        goto cleanup_sdl_terminal;
+    }
+
+    SDL_TerminalSetSize(terminal, 80, 25);
+    SDL_TerminalSetPosition(terminal, 0, 0);
+    SDL_TerminalSetScaling(terminal, 1.5, 1.5);
+    SDL_TerminalDisableKB(terminal);
 
     SDL_TerminalSetDefaultBackground(terminal, 0, 0, 0, 255);
     SDL_TerminalSetDefaultForeground(terminal, 255, 255, 255, 255);
     SDL_TerminalSetBorderColor (terminal, 255,255,255,255);
     SDL_TerminalReset(terminal);
 
-    SDL_TerminalClear (terminal);
-    SDL_TerminalPrint (terminal, "Terminal initialized\n");
+    SDL_TerminalClear(terminal);
+    SDL_TerminalPrint(terminal, "Terminal initialized\n");
     SDL_TerminalReset(terminal);
 
     _got_input = SDL_CreateSemaphore(0);
 
     rmk_th = SDL_CreateThread(rmk_thread, "rmk_thread", terminal);
-
 
     int done = 0;
     SDL_Event event;
@@ -436,11 +459,11 @@ int main (int argc, char **argv)
                 break;
             case SDL_RMK_UART_EVENT:
             {
-                if (event.user.data1 == 1)
+                if ((int)event.user.data1 == 1)
                 {
                     SDL_TerminalClear(terminal);
                 }
-                else if (event.user.data1 == 0)
+                else if ((int)event.user.data1 == 0)
                 {
                     SDL_TerminalPrint(terminal, "%c", event.user.code);
                 }
@@ -465,12 +488,10 @@ int main (int argc, char **argv)
         Uint32 wait = (Uint32)(1000.0f/fps);
         Uint32 new_tick  = SDL_GetTicks();
         if ((new_tick - last_tick) < wait)
+        {
             SDL_Delay (wait - (new_tick-last_tick));
+        }
         last_tick = SDL_GetTicks();
-
-        SDL_FillRect (screen, 0, 0);
-        /*SDL_Rect dst = {(800-image->w)/2, (600-image->h)/2, 0,0};
-        SDL_BlitSurface (image, NULL, screen, &dst);*/
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black
         SDL_RenderClear(renderer);
@@ -483,93 +504,18 @@ int main (int argc, char **argv)
     SDL_WaitThread(rmk_th, NULL);
     rmk_th = NULL;
 
-	/* Clean up */
-	pe_end();
-    console_end();
+cleanup_sdl_terminal:
+    SDL_DestroyTerminal(terminal);
 
-    SDL_Quit ();
-    exit (EXIT_SUCCESS);
-	return 0;
-}
-#if 0
-
-#include <SDL2/SDL.h>
-#include <SDL_ttf.h>
-//#include <iostream>
-#include <stdbool.h>
-
-
-typedef struct _console_color {
-    float r, g, b, a;
-} Console_Color;
-
-
-
-int main(int argv, char** args)
-{
-    SDL_Init(SDL_INIT_EVERYTHING);
-    TTF_Init();
-
-    SDL_Window *window = SDL_CreateWindow("Hello SDL", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
-    TTF_Font *font = TTF_OpenFont("arial.ttf", 25);
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
-
-    SDL_Color color = { 255, 255, 255 };
-    SDL_Surface *surface = TTF_RenderText_Solid(font, "TEST", color);
-
-    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-
-    Console_Color bg_color     = { 0.0f, 0.0f, 0.0f, 0.9f };
-    Console_Color font_color   = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-    bool isRunning = true;
-    SDL_Event event;
-
-    while (isRunning)
-    {
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-            case SDL_QUIT:
-                isRunning = false;
-                break;
-
-            case SDL_KEYDOWN:
-                if (event.key.keysym.sym == SDLK_ESCAPE)
-                {
-                    isRunning = false;
-                }
-            }
-        }
-
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // black
-        SDL_RenderClear(renderer);
-
-        SDL_Rect dest;
-        dest.x = 600 - (surface->w / 2.0f);
-        dest.y = 400;
-        dest.w = surface->w;
-        dest.h = surface->h;
-        //SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
-        SDL_RenderCopy(renderer, texture, NULL, &dest);
-        dest.y = 0;
-        SDL_RenderCopy(renderer, texture, NULL, &dest);
-        SDL_RenderPresent(renderer);
-
-        //SDL_RenderPresent(renderer);
-
-        SDL_Delay(10);
-    }
-
-    SDL_DestroyTexture(texture);
-    SDL_FreeSurface(surface);
-    TTF_CloseFont(font);
+cleanup_sdl_renderer:
     SDL_DestroyRenderer(renderer);
+
+cleanup_sdl_window:
     SDL_DestroyWindow(window);
-    TTF_Quit();
+
+cleanup_sdl:
     SDL_Quit();
 
-    return 0;
+    exit(return_status);
+	return 0;
 }
-#endif

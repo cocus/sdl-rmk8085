@@ -422,26 +422,25 @@ SDL_TerminalEvent (SDL_Terminal *terminal, const SDL_Event *event)
         }
         break;
     case SDL_TEXTINPUT:
-        /* else if (event->key.keysym.unicode) {
-            int c = (event->key.keysym.unicode & 0xFF);*/
-            int len = strlen(event->text.text);
-            for (int idx = 0; idx < len; idx++)
-            {
-                int c = event->text.text[idx];
-                if (SDL_TerminalLineInsertChar(terminal, c) == 0)
-                    SDL_TerminalAddChar (terminal, c);
-                // If we were in the middle of the line, we have to render the rest of the line
-                if (terminal->line_pos < strlen(terminal->line)) {
-                    int i;
-                    Vec2i saved_cpos = terminal->cpos;
-                    for (i=terminal->line_pos; i<strlen(terminal->line); i++)
-                        SDL_TerminalAddChar (terminal, terminal->line[i]);
-                    terminal->cpos = saved_cpos;
+    {
+        int len = strlen(event->text.text);
+        for (int idx = 0; idx < len; idx++)
+        {
+            int c = event->text.text[idx];
+            if (SDL_TerminalLineInsertChar(terminal, c) == 0)
+                SDL_TerminalAddChar (terminal, c);
+            // If we were in the middle of the line, we have to render the rest of the line
+            if (terminal->line_pos < strlen(terminal->line)) {
+                int i;
+                Vec2i saved_cpos = terminal->cpos;
+                for (i=terminal->line_pos; i<strlen(terminal->line); i++)
+                    SDL_TerminalAddChar (terminal, terminal->line[i]);
+                terminal->cpos = saved_cpos;
             }
             return 1;
         }
         break;
-
+    }
     case SDL_MOUSEMOTION:
         if ((event->motion.x > terminal->position.x) &&
             (event->motion.y > terminal->position.y) &&
@@ -594,7 +593,7 @@ SDL_TerminalClear (SDL_Terminal *terminal)
  * @return	If print was successful, it returns 0, otherwise it returns -1
  */
 int
-SDL_TerminalPrint (SDL_Terminal *terminal, char *text, ...)
+SDL_TerminalPrint (SDL_Terminal *terminal, const char *text, ...)
 {
     va_list argument;
     char *line = (char *) malloc (SDL_TERMINAL_MAX_LINE_SIZE*sizeof(char));
@@ -856,7 +855,7 @@ SDL_TerminalSetScaling (SDL_Terminal *terminal, float scale_width, float scale_h
  * @return					If font loading was successful, it returns 0, otherwise it returns -1
  */
 int
-SDL_TerminalSetFont (SDL_Terminal *terminal, char *filename, int size) 
+SDL_TerminalSetFont (SDL_Terminal *terminal, const char *filename, int size) 
 {
     /* Is it the same font than the current one ? */
     if ((terminal->font_filename) 

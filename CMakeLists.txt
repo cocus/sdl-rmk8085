@@ -16,8 +16,7 @@ add_executable(
     rmk8085/pe_i8279.c
     rmk8085/pe_rom.c
     rmk8085/pe_sram.c
-    rmk8085/pe_interaction.c
-    rmk8085/console_impl.c)
+    rmk8085/pe_interaction.c)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

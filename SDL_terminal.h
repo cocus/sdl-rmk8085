@@ -118,7 +118,7 @@ int SDL_TerminalBlit (SDL_Terminal *terminal, SDL_Renderer *renderer);
 int SDL_TerminalRefresh (SDL_Terminal *terminal);
 
 int SDL_TerminalClear (SDL_Terminal *terminal);
-int SDL_TerminalPrint (SDL_Terminal *terminal, char *text, ...);
+int SDL_TerminalPrint (SDL_Terminal *terminal, const char *text, ...);
 int SDL_TerminalPrintAt (SDL_Terminal *terminal, int row, int column, char *text, ...);
 int SDL_TerminalReset (SDL_Terminal *terminal);
 
@@ -126,7 +126,7 @@ int SDL_TerminalDisableKB (SDL_Terminal *terminal);
 int SDL_TerminalEnableKB (SDL_Terminal *terminal);
 
 int SDL_TerminalSetScaling (SDL_Terminal *terminal, float scale_width, float scale_height);
-int SDL_TerminalSetFont (SDL_Terminal *terminal, char *font_filename, int size);
+int SDL_TerminalSetFont (SDL_Terminal *terminal, const char *font_filename, int size);
 int SDL_TerminalSetSize (SDL_Terminal *terminal, int row, int column);
 int SDL_TerminalSetPosition (SDL_Terminal *terminal, int x, int y);
 int SDL_TerminalSetColor (SDL_Terminal *terminal, int red, int green, int blue, int alpha);
