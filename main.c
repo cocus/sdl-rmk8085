@@ -283,17 +283,60 @@ int rmk_thread(void *data)
     pe_end();
 }
 
+void send_key(uint8_t k)
+{
+    if (SDL_SemValue(_got_input))
+    {
+        return;
+    }
+
+    _input = k;
+    SDL_SemPost(_got_input);
+}
 
 void key_press (SDL_Keysym *keysym)
 {
-    switch (keysym->sym) {
-	case SDLK_ESCAPE:
-		SDL_Quit ();
-		exit (EXIT_SUCCESS);
-	    break;
-	default:
-	    break;
-	}
+    if ((keysym->mod & KMOD_CTRL) != 0)
+    {
+        /* translate directly to control codes */
+        if (keysym->sym >= '@' &&
+            keysym->sym <= '_')
+        {
+            send_key(keysym->sym - '@');
+        }
+        else if (keysym->sym >= 'a' &&
+                 keysym->sym <= 'z')
+        {
+            send_key(keysym->sym - 'a' + 1);
+        }
+    }
+    else
+    {
+        switch (keysym->sym)
+        {
+            case SDLK_RETURN:
+            case SDLK_KP_ENTER:
+            {
+                send_key('\r');
+                break;
+            }
+            case SDLK_BACKSPACE:
+            {
+                send_key(8);
+                break;
+            }
+            case SDLK_ESCAPE:
+            {
+                SDL_Quit ();
+                //exit (EXIT_SUCCESS);
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+    }
 }
 #define SDL_RMK_UART_EVENT (SDL_USEREVENT+1)
 
@@ -429,28 +472,10 @@ int main (int argc, char **argv)
 	    while (SDL_PollEvent(&event)) {
 		    switch (event.type) {
 			case SDL_KEYDOWN:
-			    key_press (&event.key.keysym);
-                if ((event.key.keysym.sym == SDLK_RETURN) || (event.key.keysym.sym == SDLK_KP_ENTER))
-                {
-                    if (SDL_SemValue(_got_input))
-                    {
-                        continue;
-                    }
-
-                    _input = '\r';
-                    SDL_SemPost(_got_input);
-                }
-                else if (event.key.keysym.sym == SDLK_BACKSPACE)
-                {
-                    if (SDL_SemValue(_got_input))
-                    {
-                        continue;
-                    }
-
-                    _input = 8;
-                    SDL_SemPost(_got_input);
-                }
+            {
+                key_press(&event.key.keysym);
 			    break;
+            }
 			case SDL_QUIT:
 			    done = 1;
 			    break;
