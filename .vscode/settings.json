@@ -1,0 +1,15 @@
+{
+    "cmake.configureOnOpen": true,
+    "cmake.configureSettings": {
+        "CMAKE_TOOLCHAIN_FILE": "${workspaceFolder}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    },
+    "files.associations": {
+        "sdl.h": "c",
+        "sdl_ttf.h": "c",
+        "gl.h": "c",
+        "glu.h": "c",
+        "sdl_terminal_private.h": "c",
+        "sdl_opengl.h": "c",
+        "sdl_thread.h": "c"
+    }
+}
